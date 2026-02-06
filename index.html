@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isobaric Compression - Physics Sim by Lall Ravi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent-red: #ef4444;
+            --accent-yellow: #facc15;
+            --accent-blue: #3b82f6;
+            --bg-slide: #ffffff;
+            --bg-page: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-page);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .slide-container {
+            background-color: var(--bg-slide);
+            width: 1280px;
+            height: 720px;
+            padding: 30px 50px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .branding {
+            position: absolute;
+            top: 20px;
+            right: 50px;
+            font-size: 16px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-icon {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--primary);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin: 0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sim-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .visual-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            height: 340px;
+            border: 1px solid #e2e8f0;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-compress {
+            background-color: var(--primary);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-compress:hover { background-color: #334155; transform: scale(1.02); }
+        .btn-compress:active { transform: scale(0.98); }
+
+        .btn-reset {
+            background-color: #e2e8f0;
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .text-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bullet-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-left: 30px;
+            font-size: 19px;
+            line-height: 1.4;
+            color: #334155;
+            margin-bottom: 12px;
+        }
+
+        .bullet-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-size: 35px;
+            top: -8px;
+            color: black;
+        }
+
+        .math-middle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .equation-stack {
+            font-family: 'Lora', serif;
+            font-size: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .convention-card {
+            background-color: #ffb74d;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            line-height: 1.5;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+            width: 280px;
+        }
+
+        .footer-formulas {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .yellow-box {
+            border: 4px solid var(--accent-yellow);
+            padding: 10px 30px;
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            background: white;
+        }
+
+        .red-box-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .red-label {
+            font-size: 16px;
+            text-align: right;
+            width: 100px;
+            font-weight: 600;
+        }
+
+        .red-box {
+            border: 4px solid var(--accent-red);
+            padding: 10px 25px;
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            background: white;
+        }
+
+        .arrow-right {
+            color: var(--accent-red);
+            font-size: 28px;
+        }
+
+        .fridge-note {
+            background-color: #fef08a;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 10px;
+            border-left: 4px solid var(--accent-yellow);
+        }
+    </style>
+</head>
+<body>
+
+<div class="slide-container">
+    <div class="branding">Physics Sim by Lall Ravi</div>
+
+    <header class="header">
+        <div class="header-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="12" x2="12" y1="8" y2="16"></line>
+                <line x1="8" x2="16" y1="12" y2="12"></line>
+            </svg>
+        </div>
+        <h1>Isobaric Compression</h1>
+    </header>
+
+    <div class="content-layout">
+        <div class="sim-box">
+            <div class="visual-container">
+                <canvas id="pistonCanvas" width="180" height="310"></canvas>
+                <canvas id="graphCanvas" width="340" height="310"></canvas>
+            </div>
+            <div class="controls">
+                <button class="btn btn-compress" id="compressBtn">COMPRESS GAS (External Force)</button>
+                <button class="btn btn-reset" id="resetBtn">RESET</button>
+            </div>
+            <div class="fridge-note">
+                The refrigerant gas is compressed at constant pressure, reducing its volume and increasing its temperature (initially), then heat is released.
+            </div>
+        </div>
+
+        <div class="text-box">
+            <ul class="bullet-list">
+                <li>If a piston or external force compresses a gas, the volume (V) decreases.</li>
+                <li>ΔV is negative, and therefore W is negative, indicating work is done <b>on</b> the gas.</li>
+                <li>Since compression reduces the temperature of the gas, the internal energy decreases (ΔU &lt; 0).</li>
+                <li>Heat is lost from the system (Q &lt; 0) because energy decreases both in internal energy and work.</li>
+            </ul>
+
+            <div class="math-middle-row">
+                <div class="equation-stack">
+                    <math display="block">
+                        <mi>W</mi><mo>=</mo><mi>P</mi><mi>Δ</mi><mi>V</mi>
+                    </math>
+                    <math display="block">
+                        <mi>Q</mi><mo>=</mo><mi>Δ</mi><mi>U</mi><mo>+</mo><mi>W</mi>
+                    </math>
+                </div>
+
+                <div class="convention-card">
+                    <strong>Q &lt; 0:</strong> Heat is removed.<br>
+                    <strong>W &lt; 0:</strong> Work is done on the gas.<br>
+                    <strong>ΔU &lt; 0:</strong> Internal energy decreases.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-formulas">
+        <div class="yellow-box">
+            <math display="block">
+                <mi>Δ</mi><mi>U</mi><mo>=</mo>
+                <mfrac><mn>3</mn><mn>2</mn></mfrac><mi>n</mi><mi>R</mi><mi>Δ</mi><mi>T</mi>
+                <mo>=</mo>
+                <mfrac><mn>3</mn><mn>2</mn></mfrac><mi>N</mi><msub><mi>k</mi><mi>B</mi></msub><mi>Δ</mi><mi>T</mi>
+            </math>
+        </div>
+
+        <div class="red-box-group">
+            <div class="red-label">Not in data booklet</div>
+            <div class="arrow-right">➔</div>
+            <div class="red-box">
+                <math display="block">
+                    <mi>Δ</mi><mi>U</mi><mo>=</mo>
+                    <mfrac><mn>3</mn><mn>2</mn></mfrac><mi>V</mi><mi>Δ</mi><mi>P</mi>
+                </math>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const pCanvas = document.getElementById('pistonCanvas');
+    const pCtx = pCanvas.getContext('2d');
+    const gCanvas = document.getElementById('graphCanvas');
+    const gCtx = gCanvas.getContext('2d');
+    const compressBtn = document.getElementById('compressBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const v_max = 260;
+    const v_min = 130;
+    let v_current = v_max; 
+    let isCompressing = false;
+    let particles = [];
+
+    // Initialize particles
+    for (let i = 0; i < 30; i++) {
+        particles.push({
+            x: 25 + Math.random() * 130,
+            y: 300 - Math.random() * v_max,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2
+        });
+    }
+
+    function drawPiston() {
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        
+        // Cylinder
+        pCtx.strokeStyle = '#334155';
+        pCtx.lineWidth = 4;
+        pCtx.beginPath();
+        pCtx.moveTo(20, 20);
+        pCtx.lineTo(20, 300);
+        pCtx.lineTo(160, 300);
+        pCtx.lineTo(160, 20);
+        pCtx.stroke();
+
+        // Gas Area
+        pCtx.fillStyle = '#e0f2fe';
+        pCtx.fillRect(22, 300 - v_current, 136, v_current);
+
+        // Particles
+        pCtx.fillStyle = '#3b82f6';
+        particles.forEach(p => {
+            // Speed slows down as temp drops during compression phase in this model
+            let speedFactor = 0.5 + (v_current / v_max) * 1.5;
+            p.x += p.vx * speedFactor;
+            p.y += p.vy * speedFactor;
+
+            if (p.x < 25 || p.x > 155) p.vx *= -1;
+            if (p.y > 295 || p.y < (300 - v_current + 5)) p.vy *= -1;
+
+            pCtx.beginPath();
+            pCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            pCtx.fill();
+        });
+
+        // Piston Head
+        pCtx.fillStyle = '#94a3b8';
+        pCtx.fillRect(18, 300 - v_current - 12, 144, 12);
+        pCtx.strokeStyle = '#1e293b';
+        pCtx.lineWidth = 2;
+        pCtx.strokeRect(18, 300 - v_current - 12, 144, 12);
+
+        // Labels
+        pCtx.fillStyle = '#0f172a';
+        pCtx.font = 'bold 14px Poppins';
+        pCtx.textAlign = 'center';
+        pCtx.fillText('area A', 90, 300 - v_current + 20);
+        pCtx.fillText('pressure P', 90, 300 - v_current/2);
+
+        // Delta d
+        if (v_current < v_max) {
+            pCtx.setLineDash([5, 5]);
+            pCtx.strokeStyle = '#64748b';
+            pCtx.beginPath();
+            pCtx.moveTo(170, 300 - v_max);
+            pCtx.lineTo(170, 300 - v_current);
+            pCtx.stroke();
+            pCtx.setLineDash([]);
+            pCtx.fillText('Δd', 172, 300 - (v_max + v_current)/2);
+        }
+
+        // Heat Removal Visual (Blue arrows going out)
+        if (isCompressing) {
+            pCtx.strokeStyle = '#3b82f6';
+            pCtx.lineWidth = 3;
+            for(let i=0; i<3; i++) {
+                let x = 40 + i*50;
+                let y = 305;
+                pCtx.beginPath();
+                pCtx.moveTo(x, y);
+                pCtx.lineTo(x, y + 20);
+                pCtx.lineTo(x-5, y+15);
+                pCtx.moveTo(x, y+20);
+                pCtx.lineTo(x+5, y+15);
+                pCtx.stroke();
+            }
+            pCtx.fillStyle = '#3b82f6';
+            pCtx.font = 'bold 16px Poppins';
+            pCtx.fillText('-Q', 90, 335);
+        }
+    }
+
+    function drawGraph() {
+        gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
+        const ox = 50;
+        const oy = 260;
+        const w = 260;
+        const h = 220;
+
+        // Axes
+        gCtx.strokeStyle = '#334155';
+        gCtx.lineWidth = 2;
+        gCtx.beginPath();
+        gCtx.moveTo(ox, oy - h);
+        gCtx.lineTo(ox, oy);
+        gCtx.lineTo(ox + w, oy);
+        gCtx.stroke();
+
+        gCtx.fillStyle = '#334155';
+        gCtx.font = 'italic 20px Lora';
+        gCtx.fillText('P', ox - 30, oy - h + 15);
+        gCtx.fillText('V', ox + w - 10, oy + 25);
+
+        const p_const = oy - 150;
+        const v_start = ox + 40 + (v_max - v_min) * 1.5;
+        const v_now = v_start - (v_max - v_current) * 1.5;
+
+        // Shaded area (Work done ON gas)
+        if (v_current < v_max) {
+            gCtx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+            gCtx.fillRect(v_now, p_const, v_start - v_now, oy - p_const);
+        }
+
+        // Process line B -> A (Compression)
+        gCtx.strokeStyle = '#ef4444';
+        gCtx.lineWidth = 4;
+        gCtx.beginPath();
+        gCtx.moveTo(v_start, p_const);
+        gCtx.lineTo(v_now, p_const);
+        gCtx.stroke();
+
+        // Points
+        gCtx.fillStyle = '#0f172a';
+        gCtx.beginPath(); gCtx.arc(v_start, p_const, 5, 0, 7); gCtx.fill();
+        gCtx.beginPath(); gCtx.arc(ox + 40, p_const, 5, 0, 7); gCtx.fill();
+
+        gCtx.font = 'bold 16px Poppins';
+        gCtx.fillText('B', v_start + 5, p_const - 12); // Starting point
+        gCtx.fillText('A', ox + 40 - 5, p_const - 12); // Ending point
+        
+        // Arrowhead
+        if (v_current < v_max - 10) {
+            gCtx.beginPath();
+            gCtx.moveTo(v_now + 10, p_const - 5);
+            gCtx.lineTo(v_now, p_const);
+            gCtx.lineTo(v_now + 10, p_const + 5);
+            gCtx.stroke();
+        }
+    }
+
+    function loop() {
+        if (isCompressing && v_current > v_min) {
+            v_current -= 0.8;
+        }
+        drawPiston();
+        drawGraph();
+        requestAnimationFrame(loop);
+    }
+
+    compressBtn.addEventListener('mousedown', () => isHeating = false, isCompressing = true);
+    window.addEventListener('mouseup', () => isCompressing = false);
+    compressBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isCompressing = true; });
+    window.addEventListener('touchend', () => isCompressing = false);
+
+    resetBtn.addEventListener('click', () => {
+        v_current = v_max;
+        isCompressing = false;
+    });
+
+    loop();
+</script>
+</body>
+</html>
