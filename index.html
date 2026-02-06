@@ -373,8 +373,12 @@
             p.x += p.vx * speedFactor;
             p.y += p.vy * speedFactor;
 
+            // Bounds checking
             if (p.x < 25 || p.x > 155) p.vx *= -1;
             if (p.y > 295 || p.y < (300 - v_current + 5)) p.vy *= -1;
+            
+            // Keep particles inside if volume shrinks suddenly
+            if (p.y < (300 - v_current + 5)) p.y = 300 - v_current + 10;
 
             pCtx.beginPath();
             pCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
@@ -459,7 +463,13 @@
             gCtx.fillRect(v_now, p_const, v_start - v_now, oy - p_const);
         }
 
-        // Process line B -> A (Compression)
+        // Static Point B
+        gCtx.fillStyle = '#0f172a';
+        gCtx.beginPath(); gCtx.arc(v_start, p_const, 5, 0, Math.PI * 2); gCtx.fill();
+        gCtx.font = 'bold 16px Poppins';
+        gCtx.fillText('B', v_start + 5, p_const - 12);
+
+        // Process line B -> Current
         gCtx.strokeStyle = '#ef4444';
         gCtx.lineWidth = 4;
         gCtx.beginPath();
@@ -467,21 +477,16 @@
         gCtx.lineTo(v_now, p_const);
         gCtx.stroke();
 
-        // Points
-        gCtx.fillStyle = '#0f172a';
-        gCtx.beginPath(); gCtx.arc(v_start, p_const, 5, 0, 7); gCtx.fill();
-        gCtx.beginPath(); gCtx.arc(ox + 40, p_const, 5, 0, 7); gCtx.fill();
-
-        gCtx.font = 'bold 16px Poppins';
-        gCtx.fillText('B', v_start + 5, p_const - 12); // Starting point
-        gCtx.fillText('A', ox + 40 - 5, p_const - 12); // Ending point
+        // Current Moving Point A
+        gCtx.beginPath(); gCtx.arc(v_now, p_const, 5, 0, Math.PI * 2); gCtx.fill();
+        gCtx.fillText('A', v_now - 10, p_const - 12);
         
-        // Arrowhead
-        if (v_current < v_max - 10) {
+        // Arrowhead indicating direction B -> A
+        if (v_current < v_max - 5) {
             gCtx.beginPath();
-            gCtx.moveTo(v_now + 10, p_const - 5);
-            gCtx.lineTo(v_now, p_const);
-            gCtx.lineTo(v_now + 10, p_const + 5);
+            gCtx.moveTo(v_now + 15, p_const - 6);
+            gCtx.lineTo(v_now + 5, p_const);
+            gCtx.lineTo(v_now + 15, p_const + 6);
             gCtx.stroke();
         }
     }
@@ -495,16 +500,27 @@
         requestAnimationFrame(loop);
     }
 
-    compressBtn.addEventListener('mousedown', () => isHeating = false, isCompressing = true);
-    window.addEventListener('mouseup', () => isCompressing = false);
-    compressBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isCompressing = true; });
-    window.addEventListener('touchend', () => isCompressing = false);
+    // Interaction logic
+    const startCompression = (e) => {
+        if (e) e.preventDefault();
+        isCompressing = true;
+    };
+    
+    const stopCompression = () => {
+        isCompressing = false;
+    };
+
+    compressBtn.addEventListener('mousedown', startCompression);
+    window.addEventListener('mouseup', stopCompression);
+    compressBtn.addEventListener('touchstart', startCompression);
+    window.addEventListener('touchend', stopCompression);
 
     resetBtn.addEventListener('click', () => {
         v_current = v_max;
         isCompressing = false;
     });
 
+    // Start loop immediately, but logic inside handles the "isCompressing" state
     loop();
 </script>
 </body>
